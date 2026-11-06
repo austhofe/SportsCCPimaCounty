@@ -46,7 +46,7 @@ long_df <- long_df %>%
       question %in% c(
         "frustrated", "lowparticipation", "comfort",
         "people_6", "social", "tradition"
-      ) ~ "Participants & Spectators",
+      ) ~ "Engagement",
       
       question %in% c(
         "health_athletes_10",
@@ -98,6 +98,7 @@ role_summary_cc <-
     .groups = "drop"
   )
 
+
 sport_level_summary_nocc <-
   long_df_nocc %>%
   group_by(sport_level, domain) %>%
@@ -119,6 +120,26 @@ role_summary_nocc <-
     n = n(),
     .groups = "drop"
   )
+
+
+
+#### Overall risk scores to include in table 1####
+overall_risk_scores <-
+  long_df_cc %>%
+  group_by(question) %>%
+  summarise(
+    likelihood = mean(likelihood, na.rm = TRUE),
+    severity = mean(severity, na.rm = TRUE),
+    riskscore = mean(risk_score, na.rm = TRUE),
+    n = sum(!is.na(risk_score)),
+    sd_risk_score = sd(risk_score, na.rm = TRUE),
+    se = sd_risk_score / sqrt(n),
+    t_critical = qt(0.975, df = n - 1),
+    lower_ci = riskscore - t_critical * se,
+    upper_ci = riskscore + t_critical * se,
+    .groups = "drop"
+  )
+
 
 
 # ============================================================
@@ -156,7 +177,7 @@ sport_level_summary_cc %>%
     "monsoon" = "Monsoon",
     "airq" = "Air Quality",
     "drought" = "Drought"
-  )) +
+  ), limits = c("drought" , "monsoon", "airq", "risingtemps","extremeheat"  )) +
   labs(
     x = "Sport Level",
     y = NULL,
@@ -206,7 +227,7 @@ role_summary_cc %>%
     "monsoon" = "Monsoon",
     "airq" = "Air Quality",
     "drought" = "Drought"
-  )) +
+  ), limits = c("drought" , "monsoon", "airq", "risingtemps","extremeheat"  )) +
   scale_x_discrete(labels = c(
     "Coach, Athletic Trainer, or Fitness Professional" = "Coach",
     "Other (Sports Official, Medical Staff)" = "Other"
@@ -253,6 +274,10 @@ sport_level_summary_nocc %>%
     name = "Risk\nScore",
     oob = scales::squish
   ) +
+  scale_y_discrete(limits = c("Engagement" , "Infrastructure", 
+                              "Scheduling & Management", "Finances",
+                              "Spectator Health & Safety",
+                              "Athlete Health & Safety")) +
   labs(
     x = "Sport Level",
     y = NULL,
@@ -272,7 +297,7 @@ sport_level_summary_nocc %>%
 
 role_summary_nocc %>%
   filter(!is.na(sport_role)) %>%
-  filter(sport_role != "Other (Sports Official, Medical Staff)") %>%
+  filter(sport_role != "Sports Official or Other") %>%
   mutate(
     domain = fct_reorder(domain, risk_score, .fun = mean)
   ) %>%
@@ -296,14 +321,17 @@ role_summary_nocc %>%
     name = "Risk\nScore",
     oob = scales::squish
   ) +
+  scale_y_discrete(limits = c("Engagement" , "Infrastructure", 
+                              "Scheduling & Management", "Finances",
+                              "Spectator Health & Safety",
+                              "Athlete Health & Safety")) +
   labs(
     x = "Role",
     y = NULL,
     title = "Domain Risk Score by Role"
   ) +
   scale_x_discrete(labels = c(
-    "Coach, Athletic Trainer, or Fitness Professional" = "Coach",
-    "Other (Sports Official, Medical Staff)" = "Other"
+    "Coach, Athletic Trainer, or Fitness Professional" = "Coach"
   )) +
   theme_bw() +
   theme(

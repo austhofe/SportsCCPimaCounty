@@ -57,10 +57,91 @@ dat <- dat %>%
         "Administrator",
         "Coach, Athletic Trainer, or Fitness Professional",
         "Athlete",
-        "Other (Sports Official, Medical Staff)"
+        "Sports Official or Other"),
+    ),
+    
+    sport_role2 = case_when(
+        role_1 == "1" ~ 1,
+        role_2 == "1" ~ 2,
+        role_3 == "1" ~ 3,
+        role_4 == "1" | role_5 == "1" | role_6 == "1" ~ 4,
+        TRUE ~ NA_real_
+      ),
+    
+    sport_role2 = factor(
+        sport_role2,
+        levels = 1:4,
+        labels = c(
+          "Athlete",
+          "Coach, Athletic Trainer, or Fitness Professional",
+          "Administrator",
+          "Sports Official or Other"
       )
     )
   )
+
+
+#### Create a role matrix to see the overlap between roles ####
+role_overlap <- dat %>%
+  transmute(
+    Administrator = role_3 == "1",
+    Coach = role_2 == "1",
+    Athlete = role_1 == "1",
+    Sports_Official = role_4 == "1",
+    Medical_Staff = role_5 == "1",
+    Other = role_6 == "1"
+  ) %>%
+  mutate(
+    across(everything(), ~ replace_na(.x, FALSE))
+  )
+
+role_pairwise <- tibble(
+  role_1 = c(
+    "Administrator",
+    "Administrator",
+    "Administrator",
+    "Administrator",
+    "Administrator",
+    "Coach, Athletic Trainer, or Fitness Professional",
+    "Coach, Athletic Trainer, or Fitness Professional",
+    "Coach, Athletic Trainer, or Fitness Professional",
+    "Coach, Athletic Trainer, or Fitness Professional",
+    "Athlete"
+  ),
+  role_2 = c(
+    "Coach, Athletic Trainer, or Fitness Professional",
+    "Athlete",
+    "Sports Official",
+    "Medical Staff",
+    "Other",
+    "Athlete",
+    "Sports Official",
+    "Medical Staff",
+    "Other",
+    "Sports Official"
+  )
+)
+role_vars <- c(
+  "Administrator",
+  "Coach",
+  "Athlete",
+  "Sports_Official",
+  "Medical_Staff",
+  "Other"
+)
+
+role_overlap_matrix <- sapply(
+  role_vars,
+  function(x) sapply(
+    role_vars,
+    function(y) sum(role_overlap[[x]] & role_overlap[[y]], na.rm = TRUE)
+  )
+)
+
+rownames(role_overlap_matrix) <- role_vars
+colnames(role_overlap_matrix) <- role_vars
+
+role_overlap_matrix
 
 # -------------------------------------------------------------------------
 # 4. Sport and sport-level variables

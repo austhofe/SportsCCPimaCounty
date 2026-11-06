@@ -20,7 +20,7 @@ render_n <- function(x, ...) sum(!is.na(x))
 render_missing <- function(x, ...) c("Missing" = sum(is.na(x)))
 
 #Table 1 including descriptive statistics
-table1(~ sport + sport_level + sport_role + winter + spring + summer+ fall + year_round, sport_data,
+table1(~ sport + sport_level + sport_role2 + winter + spring + summer+ fall + year_round, sport_data,
        render.continuous = "N",
        render.missing = render_missing)
 
